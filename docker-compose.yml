@@ -1,0 +1,64 @@
+version: "3.3"
+services:
+  dockerproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:latest
+    container_name: dockerproxy
+    healthcheck:
+      test: wget --spider http://localhost:2375/version || exit 1
+      interval: "10s"
+      timeout: "10s"
+      retries: 20
+      start_period: "21s" # 21s
+    #privileged: true # initially not set
+    environment:
+      - TZ=Europe/Berlin
+      - LOG_LEVEL=debug # debug,info,notice,warning,err,crit,alert,emerg
+      ## Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
+      # 0 to revoke access.
+      # 1 to grant access.
+      ## Granted by Default
+      - EVENTS=1
+      - PING=1
+      - VERSION=1
+      ## Revoked by Default
+      # Security critical
+      - AUTH=0
+      - SECRETS=0
+      - POST=1 # Watchtower
+      # Not always needed
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1 # Traefik, portainer, etc.
+      - DISTRIBUTION=0
+      - EXEC=0
+      - IMAGES=1 # Portainer
+      - INFO=1 # Portainer
+      - NETWORKS=1 # Portainer
+      - NODES=0
+      - PLUGINS=0
+      - SERVICES=1 # Portainer
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=1 # Portainer
+      - VOLUMES=1 # Portainer
+    ports:
+      - "127.0.0.1:2375:2375"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Mounted as read-only
+    restart: unless-stopped
+    
+  test1:
+     container_name: test1
+     image: herrmmku/test1
+     depends_on:
+      dockerproxy:
+       condition: service_healthy   
+     #volumes:
+     #  - /var/run/docker.sock:/var/run/docker.sock
+     restart: no
+     volumes:
+       - /Users/markus/Desktop/docker:/home/
+     environment:
+       - DOCKER_HOST=tcp://dockerproxy:2375
