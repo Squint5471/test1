@@ -10,8 +10,6 @@ COPY generate_docker_html.sh /usr/local/bin/generate_docker_html.sh
 
 # Make the script executable
 RUN chmod +x /usr/local/bin/generate_docker_html.sh
-#RUN chmod +x /usr/local/bin/test.sh
 
 # Define the command to run the script
 CMD ["generate_docker_html.sh"]
-#CMD ["test.sh"]
